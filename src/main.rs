@@ -39,7 +39,7 @@ struct Opt {
     base_dir: PathBuf,
 
     /// Use random data instead of zeros
-    #[structopt(short, long)]
+    #[structopt(short = "R", long)]
     random_data: bool,
 
     /// Verify files after writing
