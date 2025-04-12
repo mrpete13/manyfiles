@@ -9,5 +9,6 @@ By default there are 5 directories that total 15GiB written to /tmp/dirs/.
 Prerequisites:
 - Rust installed (https://www.rust-lang.org/tools/install)
 
-Clone this repo and running `cargo build --release`
+Clone this repo and run `cargo build --release` from the root of this repo
+The binary file will then be located in target/release/manyfiles
 Use `manyfiles --help` to see the available commands.
