@@ -203,7 +203,7 @@ fn create_file(
                 anyhow::bail!("Verification failed: unexpected EOF in {:?}", file_path);
             }
 
-            if &verify_buf[..bytes_read] != &buffer[..bytes_read] {
+            if verify_buf[..bytes_read] != buffer[..bytes_read] {
                 anyhow::bail!("Verification failed: data mismatch in {:?}", file_path);
             }
 
@@ -214,25 +214,33 @@ fn create_file(
     Ok(())
 }
 
-fn create_files_in_directory(
-    dir_index: usize,
-    dir_path: &Path,
+struct DirectoryConfig {
     file_size_bytes: u64,
     files_per_directory: usize,
+    verify: bool,
+    io_limit: u64,
+}
+
+fn create_files_in_directory(
+    _dir_index: usize,
+    dir_path: &Path,
+    config: &DirectoryConfig,
     buffer: Arc<Vec<u8>>,
     progress_bar: ProgressBar,
     completed_files: &mut [bool],
-    verify: bool,
-    io_limit: u64,
 ) -> Result<()> {
     // Create the directory if it doesn't exist
     fs::create_dir_all(dir_path)
         .with_context(|| format!("Failed to create directory: {:?}", dir_path))?;
 
     // Process each file in this directory
-    for file_index in 0..files_per_directory {
+    for (file_index, completed) in completed_files
+        .iter_mut()
+        .enumerate()
+        .take(config.files_per_directory)
+    {
         // Skip if already completed
-        if completed_files[file_index] {
+        if *completed {
             progress_bar.inc(1);
             continue;
         }
@@ -241,12 +249,12 @@ fn create_files_in_directory(
             dir_path,
             file_index,
             &buffer,
-            file_size_bytes,
-            verify,
-            io_limit,
+            config.file_size_bytes,
+            config.verify,
+            config.io_limit,
         )?;
 
-        completed_files[file_index] = true;
+        *completed = true;
         progress_bar.inc(1);
     }
 
@@ -348,33 +356,39 @@ fn main() -> Result<()> {
     let start_time = Instant::now();
 
     // Process directories in parallel
-    let dir_results: Vec<_> = (0..opt.num_directories)
-        .into_par_iter()
-        .map(|dir_index| {
-            let buffer = buffer.clone();
-            let progress_bar = dir_progress_bars[dir_index].clone();
-            let base_dir = opt.base_dir.clone();
-            let dir_path = base_dir.join(format!("dir_{}", dir_index + 1));
+    let dir_results: Vec<(Result<()>, Vec<bool>)> = pool.install(|| {
+        (0..opt.num_directories)
+            .into_par_iter()
+            .map(|dir_index| {
+                let buffer = buffer.clone();
+                let progress_bar = dir_progress_bars[dir_index].clone();
+                let base_dir = opt.base_dir.clone();
+                let dir_path = base_dir.join(format!("dir_{}", dir_index + 1));
 
-            // Clone the completion state for this directory
-            let mut dir_completed = state.completed_files[dir_index].clone();
+                // Clone the completion state for this directory
+                let mut dir_completed = state.completed_files[dir_index].clone();
 
-            let result = create_files_in_directory(
-                dir_index,
-                &dir_path,
-                file_size_bytes,
-                files_per_directory as usize,
-                buffer,
-                progress_bar,
-                &mut dir_completed,
-                opt.verify,
-                opt.io_limit,
-            );
+                let config = DirectoryConfig {
+                    file_size_bytes,
+                    files_per_directory: files_per_directory as usize,
+                    verify: opt.verify,
+                    io_limit: opt.io_limit,
+                };
 
-            // Return both the result and the updated completion state
-            (result, dir_completed)
-        })
-        .collect();
+                let result = create_files_in_directory(
+                    dir_index,
+                    &dir_path,
+                    &config,
+                    buffer,
+                    progress_bar,
+                    &mut dir_completed,
+                );
+
+                // Return both the result and the updated completion state
+                (result, dir_completed)
+            })
+            .collect()
+    });
 
     // Now update the state with the results
     for (dir_index, (result, dir_completed)) in dir_results.into_iter().enumerate() {
