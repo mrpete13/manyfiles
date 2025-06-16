@@ -1,7 +1,7 @@
 ## manyfiles
 
 This program creates many files of specified sizes in multiple directories.
-This was *not* originally written to be a benchmarking tool but rather a utility for creating large amounts of files for other varioustesting purposes.
+This was *not* originally written to be a benchmarking tool but rather a utility for creating large amounts of files for other various testing purposes.
 
 By default there are 5 directories that total 15GiB written to /tmp/dirs/.
 
