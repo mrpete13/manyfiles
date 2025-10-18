@@ -1,5 +1,5 @@
 use clap::Parser;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -32,7 +32,7 @@ pub struct Args {
 
 fn main() {
     let args = Args::parse();
-    if let Err(e) = manyfiles::make_files(
+    if let Err(e) = manyfiles::make_file(
         args.path.as_ref(),
         args.total_size_bytes,
         args.file_size_bytes,
