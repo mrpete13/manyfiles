@@ -1,41 +1,40 @@
 use clap::Parser;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
 pub struct Args {
     #[clap(short = 'p', long = "path", default_value = "/tmp/dirs")]
-    path: Option<PathBuf>,
+    path: PathBuf,
 
     #[clap(short = 's', long = "size", default_value = "1GiB")]
-    total_size_bytes: Option<String>,
+    total_size: Option<String>,
 
     #[clap(short = 'd', long = "numdirs", default_value = "4")]
-    dir_count: Option<u16>,
+    dir_count: u16,
 
     #[clap(short = 'f', long = "filesize", default_value = "256KiB")]
-    file_size_bytes: Option<String>,
+    file_size: Option<String>,
 
     #[clap(short = 'j', long = "threads", default_value = "4")]
-    thread_count: Option<u16>,
+    thread_count: u16,
 
     #[clap(short = 'r', long = "random", default_value = "false")]
     random_data: Option<bool>,
 }
 
-// todo!(
-// "
-// - Cumulative size isn't being created.
-// - Files aren't being created in subdirectories.
-// "
-// );
-
 fn main() {
     let args = Args::parse();
-    if let Err(e) = manyfiles::make_file(
-        args.path.as_ref(),
-        args.total_size_bytes,
-        args.file_size_bytes,
+    println!("Path: {:?}", args.path);
+    println!("Total size: {:?}", args.total_size);
+    println!("File size: {:?}", args.file_size);
+    println!("Directory count: {}", args.dir_count);
+    println!("Thread count: {}", args.thread_count);
+    println!("Random data: {}", args.random_data.unwrap());
+    if let Err(e) = manyfiles::gen_files(
+        &args.path,
+        args.total_size,
+        args.file_size,
         args.dir_count,
         args.thread_count,
         args.random_data,

@@ -6,7 +6,6 @@ edition = "2024"
 [dependencies]
 indicatif = "0.17"
 rand = "0.8"
-rayon = "1.7"
 structopt = "0.3"
 num_cpus = "1.15"
 byte-unit = "5.1.6"
