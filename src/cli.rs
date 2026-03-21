@@ -2,6 +2,7 @@ use std::path::PathBuf;
 
 use clap::Parser;
 
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Parser, Debug)]
 #[command(
     name = "many_files",
@@ -37,7 +38,16 @@ pub struct Opt {
     #[arg(short, long)]
     pub verify: bool,
 
-    /// Resume a previous interrupted run
+    /// Bypass the page cache using `O_DIRECT` (Linux only).
+    /// File size and buffer size are rounded down to the filesystem block size.
+    #[arg(long)]
+    pub no_cache: bool,
+
+    /// Save job state to disk so a run can be resumed later (see --resume)
+    #[arg(long)]
+    pub save_state: bool,
+
+    /// Resume a previous run. Implies --save-state.
     #[arg(short, long)]
     pub resume: bool,
 
