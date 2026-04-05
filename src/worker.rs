@@ -7,7 +7,6 @@ use anyhow::{Context, Result};
 use indicatif::ProgressBar;
 use rand::{RngCore, thread_rng};
 
-use crate::layout::AlignedBuffer;
 
 // ─── Per-thread buffer state ──────────────────────────────────────────────────
 

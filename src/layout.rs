@@ -129,7 +129,7 @@ pub struct Layout {
 pub fn compute_layout(opt: &Opt) -> Result<Layout> {
     let total_size_bytes = parse_size(&opt.total_size)
         .with_context(|| format!("Invalid --total-size '{}'", opt.total_size))?;
-    let mut file_size_bytes = parse_size(&opt.file_size)
+    let file_size_bytes = parse_size(&opt.file_size)
         .with_context(|| format!("Invalid --file-size '{}'", opt.file_size))?;
 
     if file_size_bytes == 0 {
